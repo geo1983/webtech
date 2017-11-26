@@ -1,10 +1,10 @@
 {% extends 'layout.html' %}
 
 {% block body %}
-	<h1>Thread</h1>
+	<h1>Threads</h1>
 	<ul class="list-group">
-		{% for article in articles %}
-		<li class="list-group-item"><a href="thread/{{article.id}}">{{article.title}}</a></li>
+		{% for thread in threads %}
+		<li class="list-group-item"><a href="thread/{{thread.id}}">{{thread.subject}}</a></li>
 		{% endfor %}
 	</ul>
 {% endblock %}

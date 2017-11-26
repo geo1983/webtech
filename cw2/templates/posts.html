@@ -1,0 +1,52 @@
+{% extends 'layout.html' %}
+
+{% block body %}
+<link rel="stylesheet" type="text/css" href="{{ url_for('static',
+    filename='css/posts.css') }}">
+  <h1>{{thread.subject}}</h1><br>
+
+
+  {% for r in rv %}
+  <div class="container">
+  <div class="col-md-10">
+      <div class="row">
+          <div class="col-md-12">
+
+                  <div class="row">
+
+
+                        <div class="panel panel-default panel-horizontal">
+                            <div class="panel-heading text-center" style="width:10em;">
+                                <span><h3>{{r.author}}</h3></span>
+                                <span>Member</span>
+                                <hr />
+                                <div class="email" style="padding-top: 10px;">Posted</div>
+                                <span><h5>{{r.post_created}}</h5><span>
+                            </div>
+
+                            <div class="panel-body">
+
+
+                        <div class="col-xs-12 col-md-12 section-box">
+
+                            <h2>Post</h2>
+                            <p>{{r.post | safe}}</p>
+
+                        </div>
+
+                            </div>
+                            <div class="panel-footer text-center" style="width:4em;">{{r.author}}
+                              <!-- {% if session.logged_in %} for further development
+                              <button class="btn btn-default">Edit</button>
+                             {% endif %} -->
+                            </div>
+
+                        </div>
+
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+      {% endfor %}
+{% endblock %}

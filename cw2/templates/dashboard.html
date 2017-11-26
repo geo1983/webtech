@@ -1,0 +1,26 @@
+{% extends 'layout.html' %}
+
+{% block body %}
+  <h1>Dashboard <small>Welcome {{session.username}}</small></h1>
+  <a class="btn btn-success" href="/add_post">Add Post</a>
+  <hr>
+  <table class="table table-striped">
+    <tr>
+      <th>ID</th>
+      <th>Post</th>
+      <th>Date</th>
+      <th>Author</th>
+      <th></th>
+    </tr>
+    {% for post in posts %}
+      <tr>
+        <td>{{post.id}}</td>
+        <td>{{post.post | safe}}</td>
+        <td>{{post.post_created}}</td>
+        <td>{{post.author}}</td>
+        <td><a href="edit_post/{{post.id}}" class="btn btn-default pull-right">Edit</a></td>
+        <td><a href="edit_post/{{post.id}}" class="btn btn-danger">Delete</a></td>
+      </tr>
+    {% endfor %}
+  </table>
+{% endblock %}
