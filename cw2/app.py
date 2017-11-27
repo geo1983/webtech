@@ -44,30 +44,36 @@ def threads():
 
 
 @app.route('/thread/<string:id>/')
-def topics(id):
+def thread(id):
+		session.pop('thread', None)
+
 		# create cursor
 		cur = mysql.connection.cursor()
 
 		# get posts
-		result = cur.execute("SELECT * FROM threads WHERE id = %s", [id])
+		cur.execute("SELECT * FROM threads WHERE id = %s", [id])
 
 		thread = cur.fetchone()
 		m = str(thread['id'])
+		session['thread'] = m
 
-		cur.execute("SELECT * FROM posts as p JOIN threads as t ON p.thread_id=t.id WHERE thread_id=%s", (m,))
+		result = cur.execute("SELECT * FROM posts as p JOIN threads as t ON p.thread_id=t.id WHERE thread_id=%s", (m,))
 		rv = cur.fetchall()
+
 
 		# for testing puposes
 		# return '<h1>'+str(thread['id'])+'</h1>'+'<br><p>'+str(rv)+'</p>'
+		if result > 0:
+			return render_template('posts.html', thread = thread, rv = rv)
+		else:
+			msg = "No posts found"
+			return render_template('posts.html', msg=msg, thread = thread, rv = rv)
+
+		# close the connection
+		cur.close()
 
 		return render_template('posts.html', thread = thread, rv = rv)
 
-
-
-
-@app.route('/threads/posts')
-def posts():
-	return render_template('posts.html')
 
 # register form class
 # from the WTForms documentation we have to create a class for each field in the register
@@ -144,7 +150,7 @@ def login():
 				# return '<h1>'+str(rv['id'])+'</h1>'
 
 				flash('Your are now logged in', 'success')
-				return redirect(url_for('dashboard'))
+				return redirect(url_for('threads'))
 			else:
 				error = 'Invalid login'
 				return render_template('login.html', error=error)
@@ -203,10 +209,10 @@ class PostForm(Form):
 	post = TextAreaField('Post', [validators.Length(min=1)])
 
 # add post
-@app.route('/add_post', methods=['GET', 'POST'])
+@app.route('/add_post/<string:id>/', methods=['GET', 'POST'])
 # used function from above to deny access to this route
 @if_logged_in
-def add_post():
+def add_post(id):
 	form = PostForm(request.form)
 	if request.method == 'POST' and form.validate():
 		post = form.post.data
@@ -214,9 +220,13 @@ def add_post():
 		# create cursaor
 		cur = mysql.connection.cursor()
 
-
 		# execute
-		cur.execute("INSERT INTO posts (post, user_id, author) VALUES (%s, %s, %s)", (post, session['usid'], session['username']))
+		cur.execute("SELECT * FROM threads WHERE id = %s", [id])
+		thread = cur.fetchone()
+		m = str(thread['id'])
+
+
+		cur.execute("INSERT INTO posts (post, user_id, thread_id, author) VALUES (%s, %s, %s, %s)", (post, session['usid'], m,  session['username']))
 
 		# commit to DB
 		mysql.connection.commit()
@@ -226,8 +236,77 @@ def add_post():
 
 		flash('Post Created', 'success')
 
-		return redirect(url_for('dashboard'))
+		return redirect(url_for('thread', id=m))
 	return render_template('add_post.html', form=form)
+
+
+# Edit post
+@app.route('/edit_post/<string:id>/', methods=['GET', 'POST'])
+# used function from above to deny access to this route
+@if_logged_in
+def edit_post(id):
+	# Create cursaor
+	cur= mysql.connection.cursor()
+	# get post by id
+	result = cur.execute("SELECT * FROM posts WHERE id = %s", [id])
+
+	post = cur.fetchone()
+	cur.close()
+
+
+	# Get the form
+	form = PostForm(request.form)
+
+	# Populate post form fields
+	form.post.data = post['post']
+
+	if request.method == 'POST' and form.validate():
+		post = request.form['post']
+
+		# create cursaor
+		cur = mysql.connection.cursor()
+
+		# execute
+		# cur.execute("SELECT * FROM threads WHERE id = %s", [id])
+		# thread = cur.fetchone()
+		# m = str(thread['id'])
+
+		cur.execute("UPDATE posts SET post=%s WHERE id = %s", (post, id))
+
+		# commit to DB
+		mysql.connection.commit()
+
+		# close connection
+		cur.close()
+
+		flash('Post Updated', 'success')
+
+		return redirect(url_for('thread', id=session['thread']))
+	return render_template('edit_post.html', form=form)
+
+
+# Delete POST
+@app.route('/delete_post/<string:id>', methods=['GET', 'POST'])
+@if_logged_in
+def delete_post(id):
+	# create cursor
+	cur = mysql.connection.cursor()
+
+	# execute
+
+
+	cur.execute("DELETE FROM posts WHERE id = %s", [id])
+
+	# commit to DB
+	mysql.connection.commit()
+
+	# close connection
+	cur.close()
+
+	flash('Post Deleted', 'success')
+
+	return redirect(url_for('thread', id=session['thread']))
+
 
 
 if __name__ == '__main__':

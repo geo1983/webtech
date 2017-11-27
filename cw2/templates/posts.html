@@ -3,7 +3,13 @@
 {% block body %}
 <link rel="stylesheet" type="text/css" href="{{ url_for('static',
     filename='css/posts.css') }}">
-  <h1>{{thread.subject}}</h1><br>
+  <div class="container">
+    <h1>{{thread.subject}}</h1>
+      {% if session.logged_in %}
+      <a class="btn btn-success" href="/add_post/{{thread.id}}">Add Post</a><br><br>
+      {% endif %}
+  </div>
+  <br>
 
 
   {% for r in rv %}
@@ -21,7 +27,8 @@
                                 <span>Member</span>
                                 <hr />
                                 <div class="email" style="padding-top: 10px;">Posted</div>
-                                <span><h5>{{r.post_created}}</h5><span>
+                                <!--custom time format in jinja-->
+                                <span><h5>{{r.post_created.strftime('%B %d, %Y %-H:%M')}}</h5><span>
                             </div>
 
                             <div class="panel-body">
@@ -29,16 +36,35 @@
 
                         <div class="col-xs-12 col-md-12 section-box">
 
-                            <h2>Post</h2>
-                            <p>{{r.post | safe}}</p>
+                            <h5 class="text-capitalize text-muted">{{r.author}}'s post</h5>
+                            <hr \>
+                            <p>{{r.post | safe}}</p> <!--safe is used to get rid of paragraph tags-->
 
                         </div>
 
                             </div>
-                            <div class="panel-footer text-center" style="width:4em;">{{r.author}}
-                              <!-- {% if session.logged_in %} for further development
-                              <button class="btn btn-default">Edit</button>
-                             {% endif %} -->
+                            <div class="panel-footer text-center" style="width:8em;">
+                              <table class="table">
+                                <tr>
+                                  <td>BMW Forum</td>
+                                </tr>
+
+                              {% if session['username'] == r.author %} <!-- shows button just where user posted -->
+                                <tr><td>
+                                <a href="/edit_post/{{r.id}}" style="width:100%;" class="btn btn-default">Edit</a>
+                              </td></tr>
+                              <tr><td>
+                                <form  action="{{url_for('delete_post', id=r.id)}}" method="post">
+                                <input type="hidden" name="_method" value="DELETE">
+                                <input type="submit" value="Delete" style="width:100%;" class="btn btn-danger">
+
+                                </form>
+
+                               {% endif %}
+
+                             </td>
+                             </tr>
+                             </table>
                             </div>
 
                         </div>
@@ -49,4 +75,5 @@
                 </div>
               </div>
       {% endfor %}
+
 {% endblock %}
